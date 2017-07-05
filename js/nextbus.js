@@ -3,6 +3,30 @@ let map;
 let markers = [];
 let lastTime = 0;
 
+function initRoute() {
+  $.ajax({ url: `http://webservices.nextbus.com/service/publicJSONFeed?command=routeConfig&a=seattle-sc&r=FHS` }).done(function(data) {
+
+    let routeCoords = [];
+
+    for (const path of data.route.path) {
+      for (const points of path.point) {
+        routeCoords.push({lat: Number(points.lat), lng: Number(points.lon)});
+      }
+
+      let routeLines = new google.maps.Polyline({
+        path: routeCoords,
+        geodesic: true,
+        strokeColor: '#FF0000',
+        strokeOpacity: 0.5,
+        strokeWeight: 5
+      });
+
+      routeLines.setMap(map);
+      routeCoords = [];
+    }
+  });
+}
+
 function getStreetCarDataInitial() {
   $.ajax({ url: `http://webservices.nextbus.com/service/publicJSONFeed?command=vehicleLocations&a=seattle-sc&r=FHS&t=0` }).done(function(data) {
     lastTime = data.lastTime.time;
@@ -75,11 +99,30 @@ function findMarkerById(id) {
 }
 
 function initMap() {
-  const uluru = {lat: 47.609809, lng: -122.320826};
+  const centerRoute = {lat: 47.609809, lng: -122.320826};
   map = new google.maps.Map(document.getElementById('map'), {
     zoom: 15,
-    center: uluru
+    center: centerRoute
   });
+
+//   let infoWindow = new google.maps.InfoWindow;
+//
+//   if (navigator.geolocation) {
+//   navigator.geolocation.getCurrentPosition(function(position) {
+//     var pos = {
+//       lat: position.coords.latitude,
+//       lng: position.coords.longitude
+//     };
+//
+//     infoWindow.setPosition(pos);
+//     infoWindow.setContent('Location found.');
+//     infoWindow.open(map);
+//     map.setCenter(pos);
+//   }, function() {
+//     handleLocationError(true, infoWindow, map.getCenter());
+//   });
+// }
+
 
   for (let i = 0; i < 4; i++) {
     const marker = new google.maps.Marker(
@@ -121,5 +164,7 @@ function getIconColor(color) {
 }
 
 // let timer = setInterval(getStreetCarData, 5000);
+$(".button-collapse").sideNav();
 initMap();
+initRoute();
 getStreetCarDataInitial();

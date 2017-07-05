@@ -48,6 +48,27 @@ table {
 }
 
 #map {
- height: 1000px;
- width: 100%;
+  /*min-height: 100%;
+  width: 100%;*/
+}
+
+#map {
+  position:fixed !important;
+  position:absolute;
+  top:0;
+  right:0;
+  bottom:0;
+  left:300px;
+}
+
+
+/* Offset for side-nav */
+/*.map-row {
+  padding-left: 300px;
+}*/
+
+@media only screen and (max-width : 992px) {
+  #map {
+    left: 0;
+  }
 }
