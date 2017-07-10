@@ -1,4 +1,6 @@
 // "use strict";
+const UPDATE_INTERVAL = 2000;
+
 let map;
 let markers = [];
 let lastTime = 0;
@@ -24,7 +26,13 @@ function initRoute() {
       routeLines.setMap(map);
       routeCoords = [];
     }
+
+    initStops(data.route.stop);
   });
+}
+
+function initStops(stops) {
+  console.log(stops);
 }
 
 function getStreetCarDataInitial() {
@@ -32,18 +40,45 @@ function getStreetCarDataInitial() {
     lastTime = data.lastTime.time;
     let iterator = 0;
     for (const vehicle of data.vehicle) {
-      markers[iterator].id = vehicle.id;
+      markers[iterator] = new google.maps.Marker(
+        {
+          map: map,
+          label: "",
+          duration: 2000,
+          easing: "jswing",
+          speedMph: convertKmHrToMph(vehicle.speedKmHr),
+          markerLastTime: vehicle.secsSinceReport,
+          icon: {
+            path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
+            scale: 4,
+            rotation: 0
+          }
+        });
+
+      markers[iterator].set("id", vehicle.id);
 
       const fillColor = getIconColor(iterator);
 
       markers[iterator].icon.strokeColor = fillColor;
 
+      markers[iterator].set("infoWindow", new google.maps.InfoWindow({
+        content: ""
+      }));
+
+      markers[iterator].addListener('click', function() {
+        this.infoWindow.open(map, this);
+      });
+
       setStreetCarRotation(markers[iterator], vehicle.heading);
       setStreetCarPosition(markers[iterator], {lat: Number(vehicle.lat), lng: Number(vehicle.lon)});
+
+      updateInfoWindow(markers[iterator]);
+
       iterator++;
     }
 
-    setInterval(getStreetCarData, 2000);
+    setInterval(getStreetCarData, UPDATE_INTERVAL);
+    setInterval(updateIntervals, 1000);
   });
 }
 
@@ -54,6 +89,8 @@ function getStreetCarData() {
       console.log("No updates", data);
       return;
     }
+
+    // If the AJAX call returns one element, convert it into an array for data consistency.
     if (!Array.isArray(data.vehicle)) {
       data.vehicle = [data.vehicle];
     }
@@ -68,6 +105,9 @@ function getStreetCarData() {
         console.error("Couldn't find marker!", vehicle.id);
       }
       else {
+        marker.set("markerLastTime", vehicle.secsSinceReport);
+        marker.set("speedMph", convertKmHrToMph(vehicle.speedKmHr));
+        // updateInfoWindow(marker, vehicle);
         setStreetCarRotation(marker, vehicle.heading);
         setStreetCarPosition(marker, coords);
 
@@ -77,7 +117,36 @@ function getStreetCarData() {
   });
 }
 
+function convertKmHrToMph(speed) {
+  return speed === undefined ? "N/A" : Math.round(speed * 0.62137119223733) + " Mph";
+}
 
+function updateIntervals() {
+  for (const marker of markers) {
+    const markerLastTime = Number(marker.get("markerLastTime"));
+    marker.set("markerLastTime", markerLastTime + 1);
+    updateAllInfoWindows();
+  }
+}
+
+function updateInfoWindow(marker) {
+  const lat = marker.getPosition().lat().toFixed(6);
+  const lng = marker.getPosition().lng().toFixed(6);
+
+  const contentString = `<ul>
+    <li>Last Updated: ${marker.markerLastTime} seconds ago</li>
+    <li>Last Speed: ${marker.speedMph}</li>
+    <li>Location: ${lat}, ${lng}</li>
+    </ul>`;
+
+  marker.infoWindow.setContent(contentString);
+}
+
+function updateAllInfoWindows() {
+  for (const marker of markers) {
+    updateInfoWindow(marker);
+  }
+}
 
 function setStreetCarPosition(marker, coords) {
   marker.setPosition(coords);
@@ -104,42 +173,6 @@ function initMap() {
     zoom: 15,
     center: centerRoute
   });
-
-//   let infoWindow = new google.maps.InfoWindow;
-//
-//   if (navigator.geolocation) {
-//   navigator.geolocation.getCurrentPosition(function(position) {
-//     var pos = {
-//       lat: position.coords.latitude,
-//       lng: position.coords.longitude
-//     };
-//
-//     infoWindow.setPosition(pos);
-//     infoWindow.setContent('Location found.');
-//     infoWindow.open(map);
-//     map.setCenter(pos);
-//   }, function() {
-//     handleLocationError(true, infoWindow, map.getCenter());
-//   });
-// }
-
-
-  for (let i = 0; i < 4; i++) {
-    const marker = new google.maps.Marker(
-      {
-        map: map,
-        label: "",
-        duration: 2000,
-        easing: "jswing",
-        icon: {
-          path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
-          scale: 4,
-          rotation: 0
-        }
-      }
-    );
-    markers.push(marker);
-  }
 }
 
 function getIconColor(color) {
@@ -163,7 +196,6 @@ function getIconColor(color) {
   return fillColor;
 }
 
-// let timer = setInterval(getStreetCarData, 5000);
 $(".button-collapse").sideNav();
 initMap();
 initRoute();

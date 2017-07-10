@@ -70,5 +70,6 @@ table {
 @media only screen and (max-width : 992px) {
   #map {
     left: 0;
+    top: 20px;
   }
 }
