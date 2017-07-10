@@ -61,6 +61,11 @@ table {
   left:300px;
 }
 
+#header {
+  display: none;
+  background-color: lightblue;
+}
+
 
 /* Offset for side-nav */
 /*.map-row {
@@ -70,6 +75,10 @@ table {
 @media only screen and (max-width : 992px) {
   #map {
     left: 0;
-    top: 20px;
+    top: 25px;
   }
-}
+
+  #header {
+    display: block;
+  }
+ }
