@@ -48,11 +48,6 @@ table {
 }
 
 #map {
-  /*min-height: 100%;
-  width: 100%;*/
-}
-
-#map {
   position:fixed !important;
   position:absolute;
   top:0;
@@ -63,14 +58,8 @@ table {
 
 #header {
   display: none;
-  background-color: lightblue;
+  background-color: #e9e9e9;
 }
-
-
-/* Offset for side-nav */
-/*.map-row {
-  padding-left: 300px;
-}*/
 
 @media only screen and (max-width : 992px) {
   #map {
@@ -82,3 +71,65 @@ table {
     display: block;
   }
  }
+
+ .collapsible-body {
+	 padding-left: 20px !important;
+	 background-color: #e9e9e9 !important;
+ }
+
+ .pointer {
+	 cursor: pointer;
+ }
+
+.favorites-header {
+	display: flex;
+	align-items: center;
+	padding-left: 20px;
+	font-size: 24px;
+	border-bottom: 1px solid black;
+}
+
+.favorites-header p {
+	padding-left: 10px;
+}
+
+.favorite-icon {
+	font-size: 20px !important;
+}
+
+.stop-header {
+	display: flex;
+	align-items: center;
+}
+
+#slide-out {
+	background-color: #e9e9e9;
+}
+
+#twitter-widget {
+	border-top: 1px solid black;
+}
+
+h3 {
+	font-size: 18px;
+	font-weight: bold;
+	display: inline-block;
+}
+
+h4 {
+	font-size: 16px;
+	font-weight: bolder;
+}
+
+ol {
+	list-style: circle;
+	margin-left: 20px;
+}
+
+.fav-star {
+	padding-left: 5px;
+}
+
+.arrival-info {
+	font-size: 14px;
+}

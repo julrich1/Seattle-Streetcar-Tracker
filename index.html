@@ -17,7 +17,7 @@
 
     <script type="text/javascript" src="js/materialize.min.js"></script>
 
-    <script src="https://maps.googleapis.com/maps/api/js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7-x8ORvR_Vu52RDOicFhwUZb26O0pQts"></script>
 
     <script src="js/markerAnimate.js"></script>
     <script src="js/SlidingMarker.min.js"></script>
@@ -25,32 +25,29 @@
       SlidingMarker.initializeGlobally();
     </script>
 
-    <script type="text/javascript" src="js/apikey.js"></script>
     <script defer type="text/javascript" src="js/nextbus.js"></script>
     <title>Seattle Streetcar Tracker</title>
   </head>
   <body>
     <ul id="slide-out" class="side-nav fixed">
       <li>
-        <div><i class="material-icons">favorite</i>Favorites</div>
+        <div class="favorites-header"><i class="material-icons">star</i><p>Favorites</p></div>
       </li>
       <li>
-        <ul class="collapsible" data-collapsible="accordion">
+        <ul class="collapsible" data-collapsible="expandable">
           <li id="favorites">
-            <div class="collapsible-header"><i class="material-icons">favorite</i>Stop 1</div>
-            <div class="collapsible-body"><span>Arrival times: blah blah</span></div>
           </li>
         </ul>
       </li>
-      <li><a href="#!">Second Sidebar Link</a></li>
-      <a class="twitter-timeline"
-        href="https://twitter.com/search?q=streetcar%20from%3Akcmetrobus"
-        data-widget-id="881942737859117056"
-        data-chrome="noheader, nofooter">
-        Tweets about streetcar from:kcmetrobus
-      </a>
-      <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-
+      <li id="twitter-widget">
+        <a class="twitter-timeline"
+          href="https://twitter.com/search?q=streetcar%20from%3Akcmetrobus"
+          data-widget-id="881942737859117056"
+          data-chrome="noheader, nofooter, transparent">
+          Tweets about streetcar from:kcmetrobus
+        </a>
+        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+      </li>
     </ul>
 
     <div id="header">

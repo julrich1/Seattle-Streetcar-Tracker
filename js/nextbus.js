@@ -47,13 +47,7 @@ function initStops(stopData) {
         zIndex: 1,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          // url: "img/stop_marker_scaled.png",
-          // scaledSize: new google.maps.Size(20, 20),
-          // origin: new google.maps.Point(0,0),
-          // anchor: new google.maps.Point(10, 16),
           scale: 4,
-          // rotation: 0,
-          // fillColor: "red"
           strokeColor: "blue",
           fillColor: "blue",
           fillOpacity: 1
@@ -82,20 +76,67 @@ function initStops(stopData) {
 
 function getArrivalTime(stop) {
   $.ajax({ url: `http://webservices.nextbus.com/service/publicJSONFeed?command=predictions&a=seattle-sc&r=FHS&s=${stop.stopId}` }).done(function(data) {
+    // If an error is returned - Can happen when a stop is at the end of the line and contains no arrival info.
+    if (data.Error) { return; }
 
-    let contentString = "<ul>";
+    let contentString = "";
 
-    contentString += `<li>${stop.title}</li>`;
+    contentString += `<div class="stop-header"><h3>${stop.title}</h3>`;
+    contentString = addFavoriteButton(contentString, stop);
+    contentString += "<h4>Arrivals:</h4>";
+    contentString += "<ol class=\"arrival-info\">";
 
     for (const arrivalTime of data.predictions.direction.prediction) {
-      contentString += `<li>${arrivalTime.minutes}</li>`;
+      contentString += `<li>${arrivalTime.minutes} mins</li>`;
     }
 
+    // contentString = contentString.slice(0, contentString.length-2);
+    // contentString += " mins";
+    // contentString += "<li>";
     contentString += "</ul>";
-    stop.infoWindow.setContent(contentString);
+
+    stop.infoWindow.setContent(contentString, stop);
+
+    addFavoriteListener(stop);
+
   }).fail(function(data) {
-    console.error("There was an error retrieving data from the API.");
+    console.error("There was an error retrieving data from the API.", data);
   });
+}
+
+function addFavoriteButton(content, stop) {
+  let icon = "star";
+
+  if (!isFavorited(stop.stopId)) {
+    icon = "star_border";
+  }
+
+  content += `<i class="material-icons yellow-text fav-star pointer" id="${stop.stopId}">${icon}</i></div>`;
+
+  return content;
+}
+
+function addFavoriteListener(stop) {
+  $(`#${stop.stopId}`).click(function (){
+    toggleFavorite(stop);
+
+    if (isFavorited(stop.stopId)) {
+      $(`#${stop.stopId}`).text("star");
+    }
+    else {
+      $(`#${stop.stopId}`).text("star_border");
+    }
+  });
+}
+
+function isFavorited(stopId) {
+  for (const favorite of favorites) {
+    if (favorite.stopId === stopId) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function getStreetCarDataInitial() {
@@ -180,10 +221,13 @@ function getStreetCarData() {
         setStreetCarRotation(marker, vehicle.heading);
         setStreetCarPosition(marker, coords);
 
-        console.log(marker.icon.strokeColor, vehicle.heading, marker.icon.rotation);
+        // console.log(marker.icon.strokeColor, vehicle.heading, marker.icon.rotation);
       }
     }
-  }).fail(function(data) {
+  }).fail(function(data, status, error) {
+    console.log("Data", data);
+    console.log("Status", status);
+    console.log("Error", error);
     console.error("There was an error retrieving data from the API.");
   });
 }
@@ -192,6 +236,7 @@ function convertKmHrToMph(speed) {
   return speed === undefined ? "N/A" : Math.round(speed * 0.62137119223733) + " Mph";
 }
 
+// Updates the time for each info window
 function updateIntervals() {
   for (const marker of markers) {
     const markerLastTime = Number(marker.get("markerLastTime"));
@@ -283,22 +328,136 @@ function closeAllInfoWindows() {
   }
 }
 
-function addFavorite(stopId) {
-  favorites.push(stopId);
-
+function saveFavorites() {
   localStorage.setItem("favorites", JSON.stringify(favorites));
+
+  getFavoritesArrivalTimes();
+  drawFavorites();
+}
+
+function toggleFavorite(stop) {
+  let iterator = 0;
+
+  for (const favorite of favorites) {
+    if (favorite.stopId === stop.stopId) {
+      favorites.splice(iterator, 1);
+      saveFavorites();
+      return;
+    }
+    iterator++;
+  }
+
+  favorites.push({stopId:stop.stopId, title:stop.title});
+
+  saveFavorites();
 }
 
 function getFavorites() {
-  favorites = JSON.parse(localStorage.getItem("favorites"));
+  const data = JSON.parse(localStorage.getItem("favorites"));
 
-  const $collapsible = $(".collapsible");
+  if (data) {
+    favorites = data;
+  }
+  getFavoritesArrivalTimes();
+  drawFavorites();
+}
+
+function getFavoritesArrivalTimes() {
+  if (favorites.length === 0) {
+    return;
+  }
+
+  const queryString = getFavoritesQueryString();
+
+  $.ajax({ url: `http://webservices.nextbus.com/service/publicJSONFeed?command=predictionsForMultiStops&a=seattle-sc${queryString}` }).done(function(data) {
+
+    // If the AJAX call returns one element, convert it into an array for data consistency.
+    if (!Array.isArray(data.predictions)) {
+      data.predictions = [data.predictions];
+    }
+
+    let arrivalTime = "Arriving in ";
+    let stopTag = "";
+
+    for (const predictions of data.predictions) {
+      stopTag = predictions.stopTag;
+      for (const time of predictions.direction.prediction) {
+        arrivalTime += `${time.minutes}, `;
+      }
+      arrivalTime = arrivalTime.slice(0, arrivalTime.length-2);
+      arrivalTime += " mins";
+
+      addArrivalTime(stopTag, arrivalTime);
+
+      stopTag = "";
+      arrivalTime = "Arriving in ";
+    }
+
+    updateFavoritesArrivalTimes();
+
+  }).fail(function() {
+    console.error("There was an error retrieving data from the API.");
+  });
+}
+
+function updateFavoritesArrivalTimes() {
+  if (favorites.length === 0) {
+    return;
+  }
 
   for (const favorite of favorites) {
-    const $collapseLi = $("<li>");
-    const $stopDiv = $("<div>").addClass("collapsible-header").text(favorite);
-    const $stopInfo = $("<div>").addClass("collapsible-body").text("Arriving in 0 minutes");
-    const $stopIcon = $("<i>").addClass("material-icons").text("favorite");
+    $(`#fav-${favorite.stopId} .collapsible-body .arrivalTime`).text(favorite.arrivalTimes);
+  }
+}
+
+function getFavoritesQueryString() {
+  let queryString = "";
+
+  for (const favorite of favorites) {
+    queryString += `&stops=FHS|${favorite.stopId}`;
+  }
+
+  return queryString;
+}
+
+function addArrivalTime(stopTag, arrivalTimes) {
+  for (const favorite of favorites) {
+    if (favorite.stopId === stopTag) {
+      favorite.arrivalTimes = arrivalTimes;
+    }
+  }
+}
+
+function drawFavorites() {
+  const $collapsible = $(".collapsible");
+
+  $collapsible.empty();
+
+  if (favorites.length === 0) {
+    const $stopDiv = $("<div>").addClass("collapsible-header").text("No Favorites Selected");
+    $collapsible.append($stopDiv);
+    $('.collapsible').collapsible();
+
+    return;
+  }
+
+  for (const favorite of favorites) {
+    const $collapseLi = $("<li>").attr("id", `fav-${favorite.stopId}`);
+    const $stopDiv = $("<div>").addClass("collapsible-header active").text(favorite.title);
+    const $stopInfo = $("<div>").addClass("collapsible-body");
+    const $bodyUl = $("<ul>");
+    const $bodyLiArrivalTimes = $("<li>").addClass("arrivalTime").text(favorite.arrivalTimes);
+    const $bodyLiFavIcon = $("<li>");
+    // const $bodyFavIcon = $("<i>").addClass("material-icons pointer").text("star");
+    const $stopIcon = $("<i>").addClass("material-icons favorite-icon").text("directions_railway");
+
+    // $bodyFavIcon.click(function() {
+    //   toggleFavorite(favorite);
+    // });
+
+    // $bodyLiFavIcon.append($bodyFavIcon);
+    $bodyUl.append($bodyLiArrivalTimes);
+    $stopInfo.append($bodyUl);
 
     $stopDiv.append($stopIcon);
     $collapseLi.append($stopDiv, $stopInfo);
@@ -312,3 +471,5 @@ $(".button-collapse").sideNav();
 initMap();
 initRoute();
 getStreetCarDataInitial();
+getFavorites();
+setInterval(getFavoritesArrivalTimes, 20000);
