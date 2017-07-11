@@ -6,6 +6,7 @@ let markers = [];
 let stops = [];
 let favorites = [];
 let lastTime = 0;
+let activeWindowTimer; // Used to update stop info windows if they are kept open
 
 function initRoute() {
   $.ajax({ url: `http://webservices.nextbus.com/service/publicJSONFeed?command=routeConfig&a=seattle-sc&r=FHS` }).done(function(data) {
@@ -67,6 +68,7 @@ function initStops(stopData) {
     stops[iterator].addListener('click', function() {
       getArrivalTime(this);
       closeAllInfoWindows();
+      activeWindowTimer = setInterval(getArrivalTime, 20000, this);
       this.infoWindow.open(map, this);
     });
 
@@ -90,9 +92,6 @@ function getArrivalTime(stop) {
       contentString += `<li>${arrivalTime.minutes} mins</li>`;
     }
 
-    // contentString = contentString.slice(0, contentString.length-2);
-    // contentString += " mins";
-    // contentString += "<li>";
     contentString += "</ul>";
 
     stop.infoWindow.setContent(contentString, stop);
@@ -135,7 +134,6 @@ function isFavorited(stopId) {
       return true;
     }
   }
-
   return false;
 }
 
@@ -149,7 +147,7 @@ function getStreetCarDataInitial() {
           map: map,
           label: "",
           duration: 2000,
-          easing: "easeInQuad",
+          easing: "easeOutQuad",
           speedMph: convertKmHrToMph(vehicle.speedKmHr),
           markerLastTime: vehicle.secsSinceReport,
           zIndex: 10,
@@ -181,7 +179,7 @@ function getStreetCarDataInitial() {
       setStreetCarRotation(markers[iterator], vehicle.heading);
       setStreetCarPosition(markers[iterator], {lat: Number(vehicle.lat), lng: Number(vehicle.lon)});
 
-      updateInfoWindow(markers[iterator]);
+      updateStreetcarInfoWindow(markers[iterator]);
 
       iterator++;
     }
@@ -217,11 +215,8 @@ function getStreetCarData() {
       else {
         marker.set("markerLastTime", vehicle.secsSinceReport);
         marker.set("speedMph", convertKmHrToMph(vehicle.speedKmHr));
-        // updateInfoWindow(marker, vehicle);
         setStreetCarRotation(marker, vehicle.heading);
         setStreetCarPosition(marker, coords);
-
-        // console.log(marker.icon.strokeColor, vehicle.heading, marker.icon.rotation);
       }
     }
   }).fail(function(data, status, error) {
@@ -241,11 +236,11 @@ function updateIntervals() {
   for (const marker of markers) {
     const markerLastTime = Number(marker.get("markerLastTime"));
     marker.set("markerLastTime", markerLastTime + 1);
-    updateAllInfoWindows();
+    updateAllStreetcarInfoWindows();
   }
 }
 
-function updateInfoWindow(marker) {
+function updateStreetcarInfoWindow(marker) {
   const lat = marker.getPosition().lat().toFixed(6);
   const lng = marker.getPosition().lng().toFixed(6);
 
@@ -258,10 +253,14 @@ function updateInfoWindow(marker) {
   marker.infoWindow.setContent(contentString);
 }
 
-function updateAllInfoWindows() {
+function updateAllStreetcarInfoWindows() {
   for (const marker of markers) {
-    updateInfoWindow(marker);
+    updateStreetcarInfoWindow(marker);
   }
+}
+
+function updateActiveStopInfoWindow() {
+  console.log("Updating active stop info!");
 }
 
 function setStreetCarPosition(marker, coords) {
@@ -319,6 +318,9 @@ function getIconColor(color) {
 }
 
 function closeAllInfoWindows() {
+
+  clearInterval(activeWindowTimer);
+
   for (const stop of stops) {
     stop.infoWindow.close();
   }
