@@ -297,22 +297,22 @@ function initMap() {
 }
 
 function getIconColor(color) {
-  let fillColor = "black";
-
-  switch(color) {
-    case 0:
-      fillColor = 'orange';
-      break;
-    case 1:
-      fillColor = "purple";
-      break;
-    case 2:
-      fillColor = "red";
-      break;
-    case 3:
-      fillColor = "green";
-      break;
-  }
+  let fillColor = "green";
+  //
+  // switch(color) {
+  //   case 0:
+  //     fillColor = 'orange';
+  //     break;
+  //   case 1:
+  //     fillColor = "purple";
+  //     break;
+  //   case 2:
+  //     fillColor = "red";
+  //     break;
+  //   case 3:
+  //     fillColor = "green";
+  //     break;
+  // }
 
   return fillColor;
 }
