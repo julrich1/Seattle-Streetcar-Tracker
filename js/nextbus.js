@@ -149,7 +149,7 @@ function getStreetCarDataInitial() {
           map: map,
           label: "",
           duration: 2000,
-          easing: "jswing",
+          easing: "easeInQuad",
           speedMph: convertKmHrToMph(vehicle.speedKmHr),
           markerLastTime: vehicle.secsSinceReport,
           zIndex: 10,
