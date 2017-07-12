@@ -4,12 +4,13 @@ const UPDATE_INTERVAL = 2000;
 let map;
 let markers = [];
 let stops = [];
-let favorites = [];
+let favorites = {FHS:[], SLU:[]};
 let lastTime = 0;
 let activeWindowTimer; // Used to update stop info windows if they are kept open
+let route = "FHS";
 
 function initRoute() {
-  $.ajax({ url: `http://webservices.nextbus.com/service/publicJSONFeed?command=routeConfig&a=seattle-sc&r=FHS` }).done(function(data) {
+  $.ajax({ url: `http://webservices.nextbus.com/service/publicJSONFeed?command=routeConfig&a=seattle-sc&r=${route}` }).done(function(data) {
 
     let routeCoords = [];
 
@@ -77,7 +78,7 @@ function initStops(stopData) {
 }
 
 function getArrivalTime(stop) {
-  $.ajax({ url: `http://webservices.nextbus.com/service/publicJSONFeed?command=predictions&a=seattle-sc&r=FHS&s=${stop.stopId}` }).done(function(data) {
+  $.ajax({ url: `http://webservices.nextbus.com/service/publicJSONFeed?command=predictions&a=seattle-sc&r=${route}&s=${stop.stopId}` }).done(function(data) {
     // If an error is returned - Can happen when a stop is at the end of the line and contains no arrival info.
     if (data.Error) { return; }
 
@@ -129,7 +130,7 @@ function addFavoriteListener(stop) {
 }
 
 function isFavorited(stopId) {
-  for (const favorite of favorites) {
+  for (const favorite of favorites[route]) {
     if (favorite.stopId === stopId) {
       return true;
     }
@@ -138,16 +139,19 @@ function isFavorited(stopId) {
 }
 
 function getStreetCarDataInitial() {
-  $.ajax({ url: `http://webservices.nextbus.com/service/publicJSONFeed?command=vehicleLocations&a=seattle-sc&r=FHS&t=0` }).done(function(data) {
+  $.ajax({ url: `http://webservices.nextbus.com/service/publicJSONFeed?command=vehicleLocations&a=seattle-sc&r=${route}&t=0` }).done(function(data) {
+
     lastTime = data.lastTime.time;
+
     let iterator = 0;
+
     for (const vehicle of data.vehicle) {
       markers[iterator] = new google.maps.Marker(
         {
           map: map,
           label: "",
           duration: 2000,
-          easing: "easeOutQuad",
+          easing: "easeInQuad",
           speedMph: convertKmHrToMph(vehicle.speedKmHr),
           markerLastTime: vehicle.secsSinceReport,
           zIndex: 10,
@@ -192,7 +196,7 @@ function getStreetCarDataInitial() {
 }
 
 function getStreetCarData() {
-  $.ajax({ url: `http://webservices.nextbus.com/service/publicJSONFeed?command=vehicleLocations&a=seattle-sc&r=FHS&t=${lastTime}` }).done(function(data) {
+  $.ajax({ url: `http://webservices.nextbus.com/service/publicJSONFeed?command=vehicleLocations&a=seattle-sc&r=${route}&t=${lastTime}` }).done(function(data) {
 
     if (!data.vehicle) {
       return;
@@ -259,10 +263,6 @@ function updateAllStreetcarInfoWindows() {
   }
 }
 
-function updateActiveStopInfoWindow() {
-  console.log("Updating active stop info!");
-}
-
 function setStreetCarPosition(marker, coords) {
   marker.setPosition(coords);
 }
@@ -283,7 +283,16 @@ function findMarkerById(id) {
 }
 
 function initMap() {
-  const centerRoute = {lat: 47.609809, lng: -122.320826};
+  let centerRoute;
+
+  switch (route) {
+    case "FHS":
+      centerRoute = {lat: 47.609809, lng: -122.320826};
+      break;
+    case "SLU":
+      centerRoute = {lat: 47.621358, lng: -122.338190};
+      break;
+  }
   map = new google.maps.Map(document.getElementById('map'), {
     zoom: 15,
     center: centerRoute,
@@ -340,16 +349,16 @@ function saveFavorites() {
 function toggleFavorite(stop) {
   let iterator = 0;
 
-  for (const favorite of favorites) {
+  for (const favorite of favorites[route]) {
     if (favorite.stopId === stop.stopId) {
-      favorites.splice(iterator, 1);
+      favorites[route].splice(iterator, 1);
       saveFavorites();
       return;
     }
     iterator++;
   }
 
-  favorites.push({stopId:stop.stopId, title:stop.title});
+  favorites[route].push({stopId:stop.stopId, title:stop.title});
 
   saveFavorites();
 }
@@ -365,7 +374,7 @@ function getFavorites() {
 }
 
 function getFavoritesArrivalTimes() {
-  if (favorites.length === 0) {
+  if (favorites[route].length === 0) {
     return;
   }
 
@@ -403,11 +412,11 @@ function getFavoritesArrivalTimes() {
 }
 
 function updateFavoritesArrivalTimes() {
-  if (favorites.length === 0) {
+  if (favorites[route].length === 0) {
     return;
   }
 
-  for (const favorite of favorites) {
+  for (const favorite of favorites[route]) {
     $(`#fav-${favorite.stopId} .collapsible-body .arrivalTime`).text(favorite.arrivalTimes);
   }
 }
@@ -415,15 +424,15 @@ function updateFavoritesArrivalTimes() {
 function getFavoritesQueryString() {
   let queryString = "";
 
-  for (const favorite of favorites) {
-    queryString += `&stops=FHS|${favorite.stopId}`;
+  for (const favorite of favorites[route]) {
+    queryString += `&stops=${route}|${favorite.stopId}`;
   }
 
   return queryString;
 }
 
 function addArrivalTime(stopTag, arrivalTimes) {
-  for (const favorite of favorites) {
+  for (const favorite of favorites[route]) {
     if (favorite.stopId === stopTag) {
       favorite.arrivalTimes = arrivalTimes;
     }
@@ -435,7 +444,7 @@ function drawFavorites() {
 
   $collapsible.empty();
 
-  if (favorites.length === 0) {
+  if (favorites[route].length === 0) {
     const $stopDiv = $("<div>").addClass("collapsible-header").text("No Favorites Selected");
     $collapsible.append($stopDiv);
     $('.collapsible').collapsible();
@@ -443,7 +452,7 @@ function drawFavorites() {
     return;
   }
 
-  for (const favorite of favorites) {
+  for (const favorite of favorites[route]) {
     const $collapseLi = $("<li>").attr("id", `fav-${favorite.stopId}`);
     const $stopDiv = $("<div>").addClass("collapsible-header active").text(favorite.title);
     const $stopInfo = $("<div>").addClass("collapsible-body");
@@ -469,6 +478,24 @@ function drawFavorites() {
   $('.collapsible').collapsible();
 }
 
+function getParams() {
+  queryString = window.location.search.slice(1);
+
+  queryString = queryString.split("=");
+
+  if (queryString[0] === "route") {
+    switch (queryString[1]) {
+      case "FHS":
+        route = "FHS";
+        break;
+      case "SLU":
+        route = "SLU";
+        break;
+    }
+  }
+}
+
+getParams();
 $(".button-collapse").sideNav();
 initMap();
 initRoute();

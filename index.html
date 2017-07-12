@@ -17,7 +17,7 @@
 
     <script type="text/javascript" src="js/materialize.min.js"></script>
 
-    <script src="https://maps.googleapis.com/maps/api/js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7-x8ORvR_Vu52RDOicFhwUZb26O0pQts"></script>
 
     <script src="js/markerAnimate.js"></script>
     <script src="js/SlidingMarker.min.js"></script>
@@ -30,6 +30,13 @@
   </head>
   <body>
     <ul id="slide-out" class="side-nav fixed">
+      <li>
+        <a class="dropdown-button btn grey black-text" href="#" data-activates="dropdown1">Select Route</a>
+        <ul id="dropdown1" class="dropdown-content">
+          <li><a href="?route=FHS"><i class="material-icons">tram</i>First Hill</a></li>
+          <li><a href="?route=SLU"><i class="material-icons">tram</i>South Lake Union</a></li>
+        </ul>
+      </li>
       <li>
         <div class="favorites-header"><i class="material-icons">star</i><p>Favorites</p></div>
       </li>
