@@ -1,4 +1,6 @@
-const UPDATE_INTERVAL = 2000;
+const UPDATE_INTERVAL = 2000; // Update interval for streetcar changes
+const STOP_UPDATE_INTERVAL = 20000; // Update interval for open info window on a stop
+const FAVORITES_UPDATE_INTERVAL = 20000; // Update interval for the favorites bar
 
 let map;
 let markers = [];
@@ -68,7 +70,7 @@ function initStops(stopData) {
     stops[iterator].addListener("click", function() {
       getArrivalTime(this);
       closeAllInfoWindows();
-      activeWindowTimer = setInterval(getArrivalTime, 20000, this);
+      activeWindowTimer = setInterval(getArrivalTime, STOP_UPDATE_INTERVAL, this);
       this.infoWindow.open(map, this);
     });
 
@@ -165,7 +167,7 @@ function getStreetCarDataInitial() {
 
       markers[iterator].set("id", vehicle.id);
 
-      const fillColor = getIconColor(iterator);
+      const fillColor = getIconColor();
 
       markers[iterator].icon.strokeColor = fillColor;
       markers[iterator].icon.fillColor = fillColor;
@@ -223,10 +225,7 @@ function getStreetCarData() {
       }
     }
   }).fail(function(data, status, error) {
-    console.log("Data", data);
-    console.log("Status", status);
-    console.log("Error", error);
-    console.error("There was an error retrieving data from the API.");
+    console.error("There was an error retrieving data from the API.", data, status, error);
   });
 }
 
@@ -303,23 +302,8 @@ function initMap() {
   });
 }
 
-function getIconColor(color) {
+function getIconColor() {
   let fillColor = "green";
-  //
-  // switch(color) {
-  //   case 0:
-  //     fillColor = 'orange';
-  //     break;
-  //   case 1:
-  //     fillColor = "purple";
-  //     break;
-  //   case 2:
-  //     fillColor = "red";
-  //     break;
-  //   case 3:
-  //     fillColor = "green";
-  //     break;
-  // }
 
   return fillColor;
 }
@@ -456,18 +440,10 @@ function drawFavorites() {
     const $stopInfo = $("<div>").addClass("collapsible-body");
     const $bodyUl = $("<ul>");
     const $bodyLiArrivalTimes = $("<li>").addClass("arrivalTime").text(favorite.arrivalTimes);
-    // const $bodyLiFavIcon = $("<li>");
-    // const $bodyFavIcon = $("<i>").addClass("material-icons pointer").text("star");
     const $stopIcon = $("<i>").addClass("material-icons favorite-icon").text("directions_railway");
 
-    // $bodyFavIcon.click(function() {
-    //   toggleFavorite(favorite);
-    // });
-
-    // $bodyLiFavIcon.append($bodyFavIcon);
     $bodyUl.append($bodyLiArrivalTimes);
     $stopInfo.append($bodyUl);
-
     $stopDiv.append($stopIcon);
     $collapseLi.append($stopDiv, $stopInfo);
     $collapsible.append($collapseLi);
@@ -499,4 +475,4 @@ initMap();
 initRoute();
 getStreetCarDataInitial();
 getFavorites();
-setInterval(getFavoritesArrivalTimes, 20000);
+setInterval(getFavoritesArrivalTimes, FAVORITES_UPDATE_INTERVAL);
