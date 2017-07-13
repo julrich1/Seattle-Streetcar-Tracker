@@ -1,4 +1,3 @@
-// "use strict";
 const UPDATE_INTERVAL = 2000;
 
 let map;
@@ -33,7 +32,7 @@ function initRoute() {
 
     initStops(data.route.stop);
   }).fail(function(data) {
-    console.error("There was an error retrieving data from the API.");
+    console.error("There was an error retrieving data from the API.", data);
   });
 }
 
@@ -66,7 +65,7 @@ function initStops(stopData) {
       content: stop.title
     }));
 
-    stops[iterator].addListener('click', function() {
+    stops[iterator].addListener("click", function() {
       getArrivalTime(this);
       closeAllInfoWindows();
       activeWindowTimer = setInterval(getArrivalTime, 20000, this);
@@ -175,7 +174,7 @@ function getStreetCarDataInitial() {
         content: ""
       }));
 
-      markers[iterator].addListener('click', function() {
+      markers[iterator].addListener("click", function() {
         closeAllInfoWindows();
         this.infoWindow.open(map, this);
       });
@@ -191,7 +190,7 @@ function getStreetCarDataInitial() {
     setInterval(getStreetCarData, UPDATE_INTERVAL);
     setInterval(updateIntervals, 1000);
   }).fail(function(data) {
-    console.error("There was an error retrieving data from the API.");
+    console.error("There was an error retrieving data from the API.", data);
   });
 }
 
@@ -278,7 +277,6 @@ function findMarkerById(id) {
       return marker;
     }
   }
-
   return null;
 }
 
@@ -286,14 +284,14 @@ function initMap() {
   let centerRoute;
 
   switch (route) {
-    case "FHS":
-      centerRoute = {lat: 47.609809, lng: -122.320826};
-      break;
-    case "SLU":
-      centerRoute = {lat: 47.621358, lng: -122.338190};
-      break;
+  case "FHS":
+    centerRoute = {lat: 47.609809, lng: -122.320826};
+    break;
+  case "SLU":
+    centerRoute = {lat: 47.621358, lng: -122.338190};
+    break;
   }
-  map = new google.maps.Map(document.getElementById('map'), {
+  map = new google.maps.Map(document.getElementById("map"), {
     zoom: 15,
     center: centerRoute,
     mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -447,7 +445,7 @@ function drawFavorites() {
   if (favorites[route].length === 0) {
     const $stopDiv = $("<div>").addClass("collapsible-header").text("No Favorites Selected");
     $collapsible.append($stopDiv);
-    $('.collapsible').collapsible();
+    $(".collapsible").collapsible();
 
     return;
   }
@@ -458,7 +456,7 @@ function drawFavorites() {
     const $stopInfo = $("<div>").addClass("collapsible-body");
     const $bodyUl = $("<ul>");
     const $bodyLiArrivalTimes = $("<li>").addClass("arrivalTime").text(favorite.arrivalTimes);
-    const $bodyLiFavIcon = $("<li>");
+    // const $bodyLiFavIcon = $("<li>");
     // const $bodyFavIcon = $("<i>").addClass("material-icons pointer").text("star");
     const $stopIcon = $("<i>").addClass("material-icons favorite-icon").text("directions_railway");
 
@@ -475,22 +473,22 @@ function drawFavorites() {
     $collapsible.append($collapseLi);
   }
 
-  $('.collapsible').collapsible();
+  $(".collapsible").collapsible();
 }
 
 function getParams() {
-  queryString = window.location.search.slice(1);
+  let queryString = window.location.search.slice(1);
 
   queryString = queryString.split("=");
 
   if (queryString[0] === "route") {
     switch (queryString[1]) {
-      case "FHS":
-        route = "FHS";
-        break;
-      case "SLU":
-        route = "SLU";
-        break;
+    case "FHS":
+      route = "FHS";
+      break;
+    case "SLU":
+      route = "SLU";
+      break;
     }
   }
 }
