@@ -97,6 +97,15 @@ table {
 	font-size: 20px !important;
 }
 
+.route-icon {
+	margin-right: 10px !important;
+}
+
+.route-link {
+	padding-left: 10px !important;
+	padding-right: 10px !important;
+} 
+
 .stop-header {
 	display: flex;
 	align-items: center;
@@ -132,4 +141,9 @@ ol {
 
 .arrival-info {
 	font-size: 14px;
+}
+
+.route-button {
+	padding-top: 20px;
+	padding-bottom: 10px;
 }

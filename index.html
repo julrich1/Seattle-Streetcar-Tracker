@@ -31,13 +31,13 @@
   </head>
   <body>
     <ul id="slide-out" class="side-nav fixed">
-      <li>
-        <a class="dropdown-button btn grey black-text" href="#" data-activates="dropdown1">Select Route</a>
+      <div class="center route-button">
+        <a class="dropdown-button btn grey black-text" data-beloworigin="true" data-constrainWidth="false" href="#" data-activates="dropdown1">Select Route</a>
         <ul id="dropdown1" class="dropdown-content">
-          <li><a href="?route=FHS"><i class="material-icons">tram</i>First Hill</a></li>
-          <li><a href="?route=SLU"><i class="material-icons">tram</i>South Lake Union</a></li>
+          <li><a href="?route=FHS" class="route-link"><i class="material-icons route-icon">tram</i>First Hill</a></li>
+          <li><a href="?route=SLU" class="route-link"><i class="material-icons route-icon">tram</i>South Lake Union</a></li>
         </ul>
-      </li>
+      </div>
       <li>
         <div class="favorites-header"><i class="material-icons">star</i><p>Favorites</p></div>
       </li>
