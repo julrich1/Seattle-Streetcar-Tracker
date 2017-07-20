@@ -2,10 +2,10 @@ const UPDATE_INTERVAL = 2000; // Update interval for streetcar changes
 const STOP_UPDATE_INTERVAL = 20000; // Update interval for open info window on a stop
 const FAVORITES_UPDATE_INTERVAL = 20000; // Update interval for the favorites bar
 
-let map;
+var map;
 let markers = [];
 let stops = [];
-let favorites = {FHS:[], SLU:[]};
+var favorites = {FHS:[], SLU:[]};
 let lastTime = 0;
 let activeWindowTimer; // Used to update stop info windows if they are kept open
 let route = "FHS";
